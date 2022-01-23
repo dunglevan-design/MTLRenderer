@@ -563,12 +563,12 @@ Colour AngleOfIncidentLighting(glm::vec3 light_pos, glm::vec3 intersection_point
 	intensity = min(intensity, 1.0f);
 	intensity = max(intensity, 0.5f);
 
-	//c_new.red *= intensity;
-	//c_new.red = min(c_new.red, 255);
-	//c_new.blue *= intensity;
-	//c_new.blue = min(c_new.blue, 255);
-	//c_new.green *= intensity;
-	//c_new.green = min(c_new.green, 255);
+	c_new.red *= intensity;
+	c_new.red = min(c_new.red, 255);
+	c_new.blue *= intensity;
+	c_new.blue = min(c_new.blue, 255);
+	c_new.green *= intensity;
+	c_new.green = min(c_new.green, 255);
 
 	return c_new;
 }
@@ -717,10 +717,9 @@ int main(int argc, char* argv[])
 	while (true)
 	{
 		// We MUST poll for events - otherwise the window will freeze !
-		draw(window, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
+		drawRaytracing(window, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
+	  //draw(window, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
 		if (window.pollForInputEvents(event))
-			//drawRaytracing(window, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
-
 			handleEvent(event, window, cameraPosition, focalLength, cameraOrientation, triangles, pallete);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
