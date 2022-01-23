@@ -22,139 +22,6 @@ using namespace std;
 #define WIDTH 320
 #define HEIGHT 240
 
-void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window, std::vector<std::vector<float>>& z)
-{
-	std::vector<CanvasPoint> line = interpolateSinglePoints(from, to);
-	for (int i = 0; i < line.size(); i++)
-	{
-		float depth = line[i].depth;
-		int x = round(line[i].x);
-		int y = round(line[i].y);
-		if (0 > x || x >= WIDTH || 0 > y || y >= HEIGHT) continue;
-		//plus 1 to shift all negatives to positive
-		if (z[x][y] == 0 || 1 / depth > z[x][y]) { // -100
-			z[x][y] = 1 / depth;
-			uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
-			window.setPixelColour(x, y, colour);
-		}
-
-		//uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
-		//window.setPixelColour(round(line[i].x), round(line[i].y), colour);
-
-	}
-}
-
-
-void drawTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window)
-{
-	std::cout << triangle << std::endl;
-	drawline(triangle.v0(), triangle.v1(), colour, window);
-	drawline(triangle.v1(), triangle.v2(), colour, window);
-	drawline(triangle.v2(), triangle.v0(), colour, window);
-}
-
-void drawRandomStrokeTriangle(DrawingWindow& window)
-{
-	CanvasPoint v0 = CanvasPoint(rand() % 320, rand() % 240);
-	CanvasPoint v1 = CanvasPoint(rand() % 320, rand() % 240);
-	CanvasPoint v2 = CanvasPoint(rand() % 320, rand() % 240);
-	Colour colour = Colour(rand() % 255, rand() % 255, rand() % 255);
-	CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
-
-	drawTriangle(triangle, colour, window);
-}
-
-
-map<string, Colour> LoadObjMaterial() {
-	map<string, Colour> pallete;
-	pallete["Red"] = Colour("Test", 255, 0, 0);
-	ifstream inputStream("cornell-box.mtl", ifstream::binary);
-	string nextline;
-	string colourname;
-	for (size_t i = 0; i < 23; i++)
-	{
-		getline(inputStream, nextline);
-		if (nextline.empty()) {
-			continue;
-		}
-		vector<string> arr = split(nextline, ' ');
-		if (arr[0] == "newmtl") {
-			colourname = arr[1];
-		}
-		if (arr[0] == "Kd") {
-			int red = (round)(stof(arr[1]) * 255);
-			int green = (round)(stof(arr[2]) * 255);
-			int blue = (round)(stof(arr[3]) * 255);
-			Colour colour = Colour(colourname, red, green, blue);
-			pallete[colourname] = colour;
-		}
-	}
-
-	return pallete;
-}
-
-
-vector<ModelTriangle> LoadObjtriangles() {
-	vector<ModelTriangle> triangles;
-	map<string, Colour>pallete = LoadObjMaterial();
-
-	vector<glm::vec3> vs;
-	float scaling = 0.17;
-	ifstream inputStream("cornell-box.obj", std::ifstream::binary);
-	string nextline;
-	getline(inputStream, nextline);
-	getline(inputStream, nextline);
-	//skip comment line
-	//119 = number of lines - first 2 comment lines.
-	Colour c = Colour();
-	for (size_t i = 0; i < 119; i++)
-	{
-
-		// get first object
-		getline(inputStream, nextline);
-		if (nextline.empty()) {
-			continue;
-		}
-		// get first object
-
-		else if (nextline.at(0) == 'o') {
-			//object
-			continue;
-		}
-		else if (nextline.at(0) == 'u') {
-			//color
-			vector<string> colorlinevector = split(nextline, ' ');
-			c = pallete.find(colorlinevector[1])->second;
-
-		}
-		else if (nextline.at(0) == 'v') {
-			//vectors or facets.
-			vector<string> linevector = split(nextline, ' ');
-			vs.push_back(glm::vec3(stof(linevector[1]) * scaling, stof(linevector[2]) * scaling, stof(linevector[3]) * scaling));
-		}
-
-		else if (nextline.at(0) == 'f') {
-			vector<string> facetvalues = split(nextline, ' ');
-			facetvalues[1].pop_back();
-			facetvalues[2].pop_back();
-			facetvalues[3].pop_back();
-			int firstvalue = stoi(facetvalues[1]) - 1;
-			int secondvalue = stoi(facetvalues[2]) - 1;
-			int thirdvalue = stoi(facetvalues[3]) - 1;
-			//Colour color = Colour("red", 255, 1, 1);
-			ModelTriangle triangle = ModelTriangle(vs[firstvalue], vs[secondvalue], vs[thirdvalue], c);
-
-			triangles.push_back(triangle);
-
-		}
-	}
-	return triangles;
-}
-
-void drawPixel(int x, int y, Colour c, DrawingWindow& window) {
-	uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
-	window.setPixelColour(x, y, colour);
-}
 
 std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
 	std::vector<float> returnVector{ from };
@@ -263,10 +130,128 @@ void interpolate2D(DrawingWindow& window) {
 	}
 }
 
-void draw(DrawingWindow& window, glm::vec3& cameraPosition, float& focalLength, vector<ModelTriangle> triangles, map<string, Colour>pallete, glm::mat3& cameraOrientation) {
-	window.clearPixels();
+void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window, std::vector<std::vector<float>>& z)
+{
+	std::vector<CanvasPoint> line = interpolateSinglePoints(from, to);
+	for (int i = 0; i < line.size(); i++)
+	{
+		float depth = line[i].depth;
+		int x = round(line[i].x);
+		int y = round(line[i].y);
+		if (0 > x || x >= WIDTH || 0 > y || y >= HEIGHT) continue;
+		//plus 1 to shift all negatives to positive
+		if (z[x][y] == 0 || 1 / depth > z[x][y]) { // -100
+			z[x][y] = 1 / depth;
+			uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+			window.setPixelColour(x, y, colour);
+		}
 
+		//uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+		//window.setPixelColour(round(line[i].x), round(line[i].y), colour);
+
+	}
 }
+
+
+void drawTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window, std::vector<std::vector<float>>& z)
+{
+	drawline(triangle.v0(), triangle.v1(), colour, window, z);
+	drawline(triangle.v1(), triangle.v2(), colour, window, z);
+	drawline(triangle.v2(), triangle.v0(), colour, window, z);
+}
+
+
+map<string, Colour> LoadObjMaterial() {
+	map<string, Colour> pallete;
+	pallete["Red"] = Colour("Test", 255, 0, 0);
+	ifstream inputStream("cornell-box.mtl", ifstream::binary);
+	string nextline;
+	string colourname;
+	for (size_t i = 0; i < 23; i++)
+	{
+		getline(inputStream, nextline);
+		if (nextline.empty()) {
+			continue;
+		}
+		vector<string> arr = split(nextline, ' ');
+		if (arr[0] == "newmtl") {
+			colourname = arr[1];
+		}
+		if (arr[0] == "Kd") {
+			int red = (round)(stof(arr[1]) * 255);
+			int green = (round)(stof(arr[2]) * 255);
+			int blue = (round)(stof(arr[3]) * 255);
+			Colour colour = Colour(colourname, red, green, blue);
+			pallete[colourname] = colour;
+		}
+	}
+
+	return pallete;
+}
+
+
+vector<ModelTriangle> LoadObjtriangles() {
+	vector<ModelTriangle> triangles;
+	map<string, Colour>pallete = LoadObjMaterial();
+
+	vector<glm::vec3> vs;
+	float scaling = 0.17;
+	ifstream inputStream("cornell-box.obj", std::ifstream::binary);
+	string nextline;
+	getline(inputStream, nextline);
+	getline(inputStream, nextline);
+	//skip comment line
+	//119 = number of lines - first 2 comment lines.
+	Colour c = Colour();
+	for (size_t i = 0; i < 119; i++)
+	{
+
+		// get first object
+		getline(inputStream, nextline);
+		if (nextline.empty()) {
+			continue;
+		}
+		// get first object
+
+		else if (nextline.at(0) == 'o') {
+			//object
+			continue;
+		}
+		else if (nextline.at(0) == 'u') {
+			//color
+			vector<string> colorlinevector = split(nextline, ' ');
+			c = pallete.find(colorlinevector[1])->second;
+
+		}
+		else if (nextline.at(0) == 'v') {
+			//vectors or facets.
+			vector<string> linevector = split(nextline, ' ');
+			vs.push_back(glm::vec3(stof(linevector[1]) * scaling, stof(linevector[2]) * scaling, stof(linevector[3]) * scaling));
+		}
+
+		else if (nextline.at(0) == 'f') {
+			vector<string> facetvalues = split(nextline, ' ');
+			facetvalues[1].pop_back();
+			facetvalues[2].pop_back();
+			facetvalues[3].pop_back();
+			int firstvalue = stoi(facetvalues[1]) - 1;
+			int secondvalue = stoi(facetvalues[2]) - 1;
+			int thirdvalue = stoi(facetvalues[3]) - 1;
+			//Colour color = Colour("red", 255, 1, 1);
+			ModelTriangle triangle = ModelTriangle(vs[firstvalue], vs[secondvalue], vs[thirdvalue], c);
+
+			triangles.push_back(triangle);
+
+		}
+	}
+	return triangles;
+}
+
+void drawPixel(int x, int y, Colour c, DrawingWindow& window) {
+	uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+	window.setPixelColour(x, y, colour);
+}
+
 
 std::vector<CanvasPoint> SortByYcoordinate(CanvasTriangle triangle)
 {
@@ -322,69 +307,55 @@ CanvasPoint find(CanvasPoint top, CanvasPoint mid, CanvasPoint bottom)
 }
 
 
-void drawFilledTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window)
+void drawFilledTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window, std::vector<std::vector<float>>& z)
 {
-
+	drawTriangle(triangle, colour, window, z);
 	std::vector<CanvasPoint> v = SortByYcoordinate(triangle);
-	cout << "3 vertices:" << endl;
-	std::cout << v[0] << std::endl
-		<< v[1] << std::endl
-		<< v[2] << std::endl;
 	CanvasPoint top = v[2];
 	CanvasPoint mid = v[1];
 	CanvasPoint bottom = v[0];
 	CanvasPoint extra = find(top, mid, bottom);
-	std::cout << "extra" << extra << std::endl;
-	// drawline(top, mid, colour,window);
-	// drawline(mid, bottom, colour,window);
-	// drawline(mid, extra, colour,window);
+
+	float xDiffa = abs(top.x - mid.x);
+	float yDiffa = abs(top.y - mid.y);
+	float zDiffa = abs(top.depth - mid.depth);
+
+	float xDiffb = abs(top.x - extra.x);
+	float yDiffb = abs(top.y - extra.y);
+	float zDiffb = abs(top.depth - extra.depth);
+
+	int numberofPoints = round(std::max(((((xDiffa, yDiffa), zDiffa), xDiffb), yDiffb), zDiffb)) + 2;
 
 
-	//top half of triangle
-	float topmidDiffx = top.x - mid.x;
-	float topextraDiffx = top.x - extra.x;
-	float yDiff = extra.y - top.y;
-	float numberOfSteps = max(std::max(abs(topmidDiffx), abs(topextraDiffx)), abs(yDiff));
+	std::vector<CanvasPoint> froms = interpolateSinglePoints(top, mid, numberofPoints);
+	std::vector<CanvasPoint> tos = interpolateSinglePoints(top, extra, numberofPoints);
 
-	float topmidStepSize = topmidDiffx / numberOfSteps;
-	float topextraStepSize = topextraDiffx / numberOfSteps;
-	float yStepSize = yDiff / numberOfSteps;
-
-	for (size_t i = 0; i < numberOfSteps; i++)
+	for (int i = 0; i < numberofPoints; i++)
 	{
-		CanvasPoint from = CanvasPoint(top.x - topmidStepSize * i, top.y + yStepSize * i);
-		CanvasPoint to = CanvasPoint(top.x - topextraStepSize * i, top.y + yStepSize * i);
-		drawline(from, to, colour, window);
+		drawline(froms[i], tos[i], colour, window, z);
+
 	}
 
-	//bottomhalf
-	float extrabottomDiffx = extra.x - bottom.x;
-	float midbottomDiffx = mid.x - bottom.x;
-	float ydiff = bottom.y - extra.y;
-	float numberOfsteps = max(std::max(abs(extrabottomDiffx), abs(midbottomDiffx)), abs(ydiff));
+	float xdiffa = abs(bottom.x - extra.x);
+	float ydiffa = abs(bottom.y - extra.y);
+	float zdiffa = abs(bottom.depth - extra.depth);
 
-	float extrabottomStepSize = extrabottomDiffx / numberOfsteps;
-	float midbottomStepSize = midbottomDiffx / numberOfsteps;
-	float ystepSize = ydiff / numberOfsteps;
+	float xdiffb = abs(bottom.x - mid.x);
+	float ydiffb = abs(bottom.y - mid.y);
+	float zdiffb = abs(bottom.depth - mid.depth);
 
-	for (size_t i = 0; i < numberOfsteps; i++)
+	int numberofpoints = round(max(((((xdiffa, ydiffa), zdiffa), xdiffb), ydiffb), zdiffb)) + 2;
+	std::vector<CanvasPoint> Bottomfroms = interpolateSinglePoints(mid, bottom, numberofpoints);
+	std::vector<CanvasPoint> Bottomtos = interpolateSinglePoints(extra, bottom, numberofpoints);
+
+	for (size_t i = 0; i < numberofpoints; i++)
 	{
-		CanvasPoint from = CanvasPoint(extra.x - extrabottomStepSize * i, extra.y + ystepSize * i);
-		CanvasPoint to = CanvasPoint(mid.x - midbottomStepSize * i, mid.y + ystepSize * i);
-		drawline(from, to, colour, window);
+		drawline(Bottomfroms[i], Bottomtos[i], colour, window, z);
 	}
+
 }
 
 
-void drawRandomFilledTriangle(DrawingWindow& window)
-{
-	CanvasPoint v0 = CanvasPoint(rand() % 320, rand() % 240);
-	CanvasPoint v1 = CanvasPoint(rand() % 320, rand() % 240);
-	CanvasPoint v2 = CanvasPoint(rand() % 320, rand() % 240);
-	Colour colour = Colour(rand() % 255, rand() % 255, rand() % 255);
-	CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
-	drawFilledTriangle(triangle, colour, window);
-}
 
 uint32_t findTexture(int x, int y, TextureMap img) {
 	return img.pixels[y * 480 + x];
@@ -496,6 +467,47 @@ void TextureMappingTriangle(DrawingWindow& window) {
 
 }
 
+
+
+
+glm::vec3 getCanvasIntersectionPoint(glm::vec3 cameraPosition, glm::vec3 vertexPosition, float focalLength, glm::mat3 cameraOrientation) {
+	float scalex = 300;
+	float scaley = 300;
+	float scalez = 300;
+	glm::vec3 scaledvertexPosition = glm::vec3(vertexPosition.x * scalex, vertexPosition.y * scaley, vertexPosition.z);
+
+	//glm::vec3 v = scaledvertexPosition - cameraPosition;
+	glm::vec3 v = (vertexPosition - cameraPosition) * cameraOrientation;
+
+	float x = focalLength * scalex * v.x / v.z + WIDTH / 2;
+	float y = focalLength * scaley * v.y / v.z + HEIGHT / 2;
+	float z = -scalez * v.z;
+	return glm::vec3(WIDTH - x, y, z);
+}
+
+void draw3D(DrawingWindow& window, std::vector<std::vector<float>>& z, glm::vec3& cameraPosition, float& focalLength, vector<ModelTriangle> triangles, map<string, Colour>pallete, glm::mat3 cameraOrientation) {
+	//vector<ModelTriangle> triangles = LoadObjtriangles(window);
+	//map<string, Colour>pallete = LoadObjMaterial(window);
+
+
+	for (size_t i = 0; i < triangles.size(); i++)
+	{
+		//cout << triangles[i].vertices[0].x << endl;
+		glm::vec3 v0 = getCanvasIntersectionPoint(cameraPosition, triangles[i].vertices[0], focalLength, cameraOrientation);
+		glm::vec3 v1 = getCanvasIntersectionPoint(cameraPosition, triangles[i].vertices[1], focalLength, cameraOrientation);
+		glm::vec3 v2 = getCanvasIntersectionPoint(cameraPosition, triangles[i].vertices[2], focalLength, cameraOrientation);
+		CanvasTriangle canvastriangle = CanvasTriangle(CanvasPoint(v0.x, v0.y, v0.z), CanvasPoint(v1.x, v1.y, v1.z), CanvasPoint(v2.x, v2.y, v2.z));
+		drawFilledTriangle(canvastriangle, triangles[i].colour, window, z);
+	}
+}
+
+
+void draw(DrawingWindow& window, glm::vec3& cameraPosition, float& focalLength, vector<ModelTriangle> triangles, map<string, Colour>pallete, glm::mat3& cameraOrientation) {
+	window.clearPixels();
+	std::vector<std::vector<float>> z(WIDTH, std::vector<float>(HEIGHT, 0));
+	draw3D(window, z, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
+
+}
 
 
 void handleEvent(SDL_Event event, DrawingWindow &window) {
