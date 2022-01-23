@@ -627,7 +627,7 @@ void drawRaytracing(DrawingWindow& window, glm::vec3& cameraPosition, float& foc
 			//Specular lighting
 
 			//cout << "light strength: " << proximityLightStrength << std::endl;
-			drawPixel(i, j, c_new_angleofincident, window);
+			drawPixel(i, j, c_new, window);
 
 
 		}
