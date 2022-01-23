@@ -1,22 +1,21 @@
 # SimpleRenderer
 A simple 3D Render engine built from scratch using nothing but C++ with SDL2 and Maths.
 
-## Interpolation 1D and 2D.
-"Filling in the gap between 2 points". 
-First we decide the colour of the 4 corners. 
-glm::vec3 topLeft(255, 0, 0);        // red 
-glm::vec3 topRight(0, 0, 255);       // blue 
-glm::vec3 bottomRight(0, 255, 0);    // green 
-glm::vec3 bottomLeft(255, 255, 0);   // yellow
-Then interpolate from topLeft -> topRight so that the points between them has colour going from red to blue
-Then interpolate from bottomLeft -> bottomRight so that the points between them has colour going from yellow to green
-Now, foreach columns, we interpolate between the top most value and the bottom value
-![2 dimensional interpolation](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/2Dinterpolation.png?alt=media&token=027e3103-1d65-41a5-9965-513da8f0ddac)
+## The program reads an object file in obj format, and an optional material file in mtl format and renders the scence with added orbit controls and lighting/shadow options.
+![AOIlighting](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/AOIighting.png?alt=media&token=19fc1f8f-5529-4964-b551-0f676f756839)
+![rotated](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/lightingrotated.png?alt=media&token=e45f882e-c917-42e1-9f2e-1b6f488f299b)
+![ambient](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/ambient.png?alt=media&token=348e23e0-813c-4fd6-a4fb-f57acc7576b2)
 
-## Draw filled triangle
-### We use rasterization(fill the triangle from top to bottom, left to right)
-![filled triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/filledtriangles.png?alt=media&token=30753c01-35cd-44b4-97db-11d8c758a144)
-![stroked triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/stroketriangles.png?alt=media&token=4e648f14-0358-4667-bf1c-43340981f720)
 
-### Texture mapping the triangles
-![texture map](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/texturemap.png?alt=media&token=004ac8bf-bf01-42c3-a795-ce27e35d4e0d)
+## Run
+Make sure you have SDL2 installed
+clone the repo. Run the following commands
+   cd SimpleRenderer
+   Put [yourobject].obj and [yourobject].mtl files in this folder
+   Rename [yourobject] -> cornell-box
+   make
+
+## commands:
+  - use arrow keys to move the camera around
+  - use x,y to rotate the camera in the x,y axis respectively 
+  - lighting options only available in ray tracing mode(comment out drawRayTracing() on line 722)
