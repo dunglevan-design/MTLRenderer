@@ -42,6 +42,28 @@ void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window)
 	}
 }
 
+
+void drawTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window)
+{
+	std::cout << triangle << std::endl;
+	drawline(triangle.v0(), triangle.v1(), colour, window);
+	drawline(triangle.v1(), triangle.v2(), colour, window);
+	drawline(triangle.v2(), triangle.v0(), colour, window);
+}
+
+void drawRandomStrokeTriangle(DrawingWindow& window)
+{
+	std::cout << "this is called";
+	CanvasPoint v0 = CanvasPoint(rand() % 320, rand() % 240);
+	CanvasPoint v1 = CanvasPoint(rand() % 320, rand() % 240);
+	CanvasPoint v2 = CanvasPoint(rand() % 320, rand() % 240);
+	Colour colour = Colour(rand() % 255, rand() % 255, rand() % 255);
+	CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
+
+	drawTriangle(triangle, colour, window);
+}
+
+
 map<string, Colour> LoadObjMaterial() {
 	map<string, Colour> pallete;
 	pallete["Red"] = Colour("Test", 255, 0, 0);
@@ -186,25 +208,83 @@ std::vector<CanvasPoint> interpolateSinglePoints(CanvasPoint from, CanvasPoint t
 }
 
 
-void draw(DrawingWindow &window) {
-	window.clearPixels();
-	for (size_t y = 0; y < window.height; y++) {
-		for (size_t x = 0; x < window.width; x++) {
-			float red = rand() % 256;
-			float green = 0.0;
-			float blue = 0.0;
-			uint32_t colour = (255 << 24) + (int(red) << 16) + (int(green) << 8) + int(blue);
+vector<glm::vec3> interpolateThreeElementValues(glm::vec3 from, glm::vec3 to, int numberOfValues)
+{
+	vector<glm::vec3> result;
+
+	vector<float> firstColumn = interpolateSingleFloats(from[0], to[0], numberOfValues);
+	vector<float> secondColumn = interpolateSingleFloats(from[1], to[1], numberOfValues);
+	vector<float> thirdColumn = interpolateSingleFloats(from[2], to[2], numberOfValues);
+
+	for (size_t i = 0; i < numberOfValues; i++)
+	{
+		glm::vec3 resultvector = glm::vec3(firstColumn[i], secondColumn[i], thirdColumn[i]);
+		result.push_back(resultvector);
+	}
+	return result;
+}
+
+void interpolate2D(DrawingWindow& window) {
+	glm::vec3 topLeft(255, 0, 0);	   // red
+	glm::vec3 topRight(0, 0, 255);	   // blue
+	glm::vec3 bottomRight(0, 255, 0);  // green
+	glm::vec3 bottomLeft(255, 255, 0); // yellow
+
+	//interpolate first and last column
+	vector<glm::vec3> firstcolumn = interpolateThreeElementValues(topLeft, bottomLeft, window.height);
+	vector<glm::vec3> lastcolumn = interpolateThreeElementValues(topRight, bottomRight, window.height);
+
+	for (size_t i = 0; i < window.height; i++)
+	{
+		uint32_t colour = (255 << 24) + ((int)(firstcolumn.at(i).x) << 16) + ((int)(firstcolumn.at(i).y) << 8) + ((int)(firstcolumn.at(i).z));
+		window.setPixelColour(0, i, colour);
+	}
+
+	for (size_t i = 0; i < window.height; i++)
+	{
+		uint32_t colour = (255 << 24) + ((int)(lastcolumn.at(i).x) << 16) + ((int)(lastcolumn.at(i).y) << 8) + ((int)(lastcolumn.at(i).z));
+		window.setPixelColour(319, i, colour);
+	}
+
+	//interpolate rows
+
+	for (size_t y = 0; y < window.height; y++)
+	{
+		glm::vec3 from = firstcolumn.at(y);
+		glm::vec3 to = lastcolumn.at(y);
+		vector<glm::vec3> row = interpolateThreeElementValues(from, to, window.width);
+
+		for (size_t x = 0; x < window.width; x++)
+		{
+			uint32_t colour = (255 << 24) + ((int)(row.at(x).x) << 16) + ((int)(row.at(x).y) << 8) + ((int)(row.at(x).z));
 			window.setPixelColour(x, y, colour);
 		}
 	}
 }
 
+
+void draw(DrawingWindow &window) {
+	//window.clearPixels();
+	
+}
+
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
-		if (event.key.keysym.sym == SDLK_LEFT) std::cout << "LEFT" << std::endl;
+		if (event.key.keysym.sym == SDLK_LEFT) {	
+			std::cout << "LEFT" << std::endl;
+		} 
 		else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
 		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
+		else if (event.key.keysym.sym == SDLK_t) {
+			std::cout << "you selected draw triangle" << std::endl;
+			drawRandomStrokeTriangle(window);
+		}
+
+		else if (event.key.keysym.sym == SDLK_i) {
+			std::cout << "you selected interpolate 2D" << std::endl;
+			interpolate2D(window);
+		}
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 		window.savePPM("output.ppm");
 		window.saveBMP("output.bmp");

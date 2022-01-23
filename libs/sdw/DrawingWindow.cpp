@@ -9,7 +9,7 @@ DrawingWindow::DrawingWindow(int w, int h, bool fullscreen) : width(w), height(h
 	uint32_t flags = SDL_WINDOW_OPENGL;
 	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	int ANYWHERE = SDL_WINDOWPOS_UNDEFINED;
-	window = SDL_CreateWindow("COMS30020", ANYWHERE, ANYWHERE, width, height, flags);
+	window = SDL_CreateWindow("SimpleRenderer", ANYWHERE, ANYWHERE, width, height, flags);
 	if (!window) printMessageAndQuit("Could not set video mode: ", SDL_GetError());
 	// Set rendering to software (hardware acceleration doesn't work on all platforms)
 	flags = SDL_RENDERER_SOFTWARE;
