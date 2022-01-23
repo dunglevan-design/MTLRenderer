@@ -14,6 +14,6 @@ Now, foreach columns, we interpolate between the top most value and the bottom v
 ![2 dimensional interpolation](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/2Dinterpolation.png?alt=media&token=027e3103-1d65-41a5-9965-513da8f0ddac)
 
 ## Draw filled triangle
-We use rasterization(fill the triangle from top to bottom, left to right)
+### We use rasterization(fill the triangle from top to bottom, left to right)
 ![filled triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/filledtriangles.png?alt=media&token=30753c01-35cd-44b4-97db-11d8c758a144)
 ![stroked triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/stroketriangles.png?alt=media&token=4e648f14-0358-4667-bf1c-43340981f720)
