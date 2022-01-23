@@ -22,23 +22,25 @@ using namespace std;
 #define WIDTH 320
 #define HEIGHT 240
 
-
-void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window)
+void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window, std::vector<std::vector<float>>& z)
 {
-
-	float xDiff = to.x - from.x;
-	float yDiff = to.y - from.y;
-	float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
-	float xStepSize = xDiff / numberOfSteps;
-	float yStepSize = yDiff / numberOfSteps;
-
-	for (size_t i = 0; i < numberOfSteps; i++)
+	std::vector<CanvasPoint> line = interpolateSinglePoints(from, to);
+	for (int i = 0; i < line.size(); i++)
 	{
-		float x = from.x + xStepSize * i;
-		float y = from.y + yStepSize * i;
+		float depth = line[i].depth;
+		int x = round(line[i].x);
+		int y = round(line[i].y);
+		if (0 > x || x >= WIDTH || 0 > y || y >= HEIGHT) continue;
+		//plus 1 to shift all negatives to positive
+		if (z[x][y] == 0 || 1 / depth > z[x][y]) { // -100
+			z[x][y] = 1 / depth;
+			uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+			window.setPixelColour(x, y, colour);
+		}
 
-		uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
-		window.setPixelColour(round(x), round(y), colour);
+		//uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+		//window.setPixelColour(round(line[i].x), round(line[i].y), colour);
+
 	}
 }
 
@@ -261,10 +263,9 @@ void interpolate2D(DrawingWindow& window) {
 	}
 }
 
+void draw(DrawingWindow& window, glm::vec3& cameraPosition, float& focalLength, vector<ModelTriangle> triangles, map<string, Colour>pallete, glm::mat3& cameraOrientation) {
+	window.clearPixels();
 
-void draw(DrawingWindow &window) {
-	//window.clearPixels();
-	
 }
 
 std::vector<CanvasPoint> SortByYcoordinate(CanvasTriangle triangle)
@@ -505,20 +506,6 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_RIGHT) std::cout << "RIGHT" << std::endl;
 		else if (event.key.keysym.sym == SDLK_UP) std::cout << "UP" << std::endl;
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
-		else if (event.key.keysym.sym == SDLK_t) {
-			std::cout << "draw triangle" << std::endl;
-			drawRandomFilledTriangle(window);
-		}
-
-		else if (event.key.keysym.sym == SDLK_i) {
-			std::cout << "interpolate 2D" << std::endl;
-			interpolate2D(window);
-		}
-
-		else if (event.key.keysym.sym == SDLK_m) {
-			std::cout << "texture mapping" << std::endl;
-			TextureMappingTriangle(window);
-		}
 
 
 	} else if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -531,13 +518,18 @@ int main(int argc, char *argv[]) {
 	vector<ModelTriangle> triangles = LoadObjtriangles();
 	map<string, Colour>pallete = LoadObjMaterial();
 	
+	glm::vec3 cameraPosition = glm::vec3(0, 0, 4.0);
+	glm::mat3 cameraOrientation(glm::vec3(1, 0, 0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+	float focalLength = 2.0;
+
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 
 	while (true) {
+		draw(window, cameraPosition, focalLength, triangles, pallete, cameraOrientation);
 		// We MUST poll for events - otherwise the window will freeze !
+
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
-		draw(window);
 		// Need to render the frame at the end, or nothing actually gets shown on the screen !
 		window.renderFrame();
 	}
