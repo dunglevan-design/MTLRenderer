@@ -53,7 +53,6 @@ void drawTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window)
 
 void drawRandomStrokeTriangle(DrawingWindow& window)
 {
-	std::cout << "this is called";
 	CanvasPoint v0 = CanvasPoint(rand() % 320, rand() % 240);
 	CanvasPoint v1 = CanvasPoint(rand() % 320, rand() % 240);
 	CanvasPoint v2 = CanvasPoint(rand() % 320, rand() % 240);
@@ -268,6 +267,126 @@ void draw(DrawingWindow &window) {
 	
 }
 
+std::vector<CanvasPoint> SortByYcoordinate(CanvasTriangle triangle)
+{
+	std::vector<CanvasPoint> v;
+	if (triangle.v0().y >= triangle.v1().y && triangle.v1().y >= triangle.v2().y)
+	{
+		v.push_back(triangle.v0());
+		v.push_back(triangle.v1());
+		v.push_back(triangle.v2());
+	}
+
+	else if (triangle.v0().y >= triangle.v2().y && triangle.v2().y >= triangle.v1().y)
+	{
+		v.push_back(triangle.v0());
+		v.push_back(triangle.v2());
+		v.push_back(triangle.v1());
+	}
+
+	else if (triangle.v1().y >= triangle.v0().y && triangle.v0().y >= triangle.v2().y)
+	{
+		v.push_back(triangle.v1());
+		v.push_back(triangle.v0());
+		v.push_back(triangle.v2());
+	}
+	else if (triangle.v1().y >= triangle.v2().y && triangle.v2().y >= triangle.v0().y)
+	{
+		v.push_back(triangle.v1());
+		v.push_back(triangle.v2());
+		v.push_back(triangle.v0());
+	}
+
+	else if (triangle.v2().y >= triangle.v0().y && triangle.v0().y >= triangle.v1().y)
+	{
+		v.push_back(triangle.v2());
+		v.push_back(triangle.v0());
+		v.push_back(triangle.v1());
+	}
+
+	else if (triangle.v2().y >= triangle.v1().y && triangle.v1().y >= triangle.v0().y)
+	{
+		v.push_back(triangle.v2());
+		v.push_back(triangle.v1());
+		v.push_back(triangle.v0());
+	}
+	return v;
+}
+
+CanvasPoint find(CanvasPoint top, CanvasPoint mid, CanvasPoint bottom)
+{
+	int extray = mid.y;
+	int extrax = top.x + (mid.y - top.y) / (bottom.y - top.y) * (bottom.x - top.x);
+	return CanvasPoint(extrax, extray);
+}
+
+
+void drawFilledTriangle(CanvasTriangle triangle, Colour colour, DrawingWindow& window)
+{
+
+	std::vector<CanvasPoint> v = SortByYcoordinate(triangle);
+	cout << "3 vertices:" << endl;
+	std::cout << v[0] << std::endl
+		<< v[1] << std::endl
+		<< v[2] << std::endl;
+	CanvasPoint top = v[2];
+	CanvasPoint mid = v[1];
+	CanvasPoint bottom = v[0];
+	CanvasPoint extra = find(top, mid, bottom);
+	std::cout << "extra" << extra << std::endl;
+	// drawline(top, mid, colour,window);
+	// drawline(mid, bottom, colour,window);
+	// drawline(mid, extra, colour,window);
+
+
+	//top half of triangle
+	float topmidDiffx = top.x - mid.x;
+	float topextraDiffx = top.x - extra.x;
+	float yDiff = extra.y - top.y;
+	float numberOfSteps = max(std::max(abs(topmidDiffx), abs(topextraDiffx)), abs(yDiff));
+
+	float topmidStepSize = topmidDiffx / numberOfSteps;
+	float topextraStepSize = topextraDiffx / numberOfSteps;
+	float yStepSize = yDiff / numberOfSteps;
+
+	for (size_t i = 0; i < numberOfSteps; i++)
+	{
+		CanvasPoint from = CanvasPoint(top.x - topmidStepSize * i, top.y + yStepSize * i);
+		CanvasPoint to = CanvasPoint(top.x - topextraStepSize * i, top.y + yStepSize * i);
+		drawline(from, to, colour, window);
+	}
+
+	//bottomhalf
+	float extrabottomDiffx = extra.x - bottom.x;
+	float midbottomDiffx = mid.x - bottom.x;
+	float ydiff = bottom.y - extra.y;
+	float numberOfsteps = max(std::max(abs(extrabottomDiffx), abs(midbottomDiffx)), abs(ydiff));
+
+	float extrabottomStepSize = extrabottomDiffx / numberOfsteps;
+	float midbottomStepSize = midbottomDiffx / numberOfsteps;
+	float ystepSize = ydiff / numberOfsteps;
+
+	for (size_t i = 0; i < numberOfsteps; i++)
+	{
+		CanvasPoint from = CanvasPoint(extra.x - extrabottomStepSize * i, extra.y + ystepSize * i);
+		CanvasPoint to = CanvasPoint(mid.x - midbottomStepSize * i, mid.y + ystepSize * i);
+		drawline(from, to, colour, window);
+	}
+}
+
+
+void drawRandomFilledTriangle(DrawingWindow& window)
+{
+	CanvasPoint v0 = CanvasPoint(rand() % 320, rand() % 240);
+	CanvasPoint v1 = CanvasPoint(rand() % 320, rand() % 240);
+	CanvasPoint v2 = CanvasPoint(rand() % 320, rand() % 240);
+	Colour colour = Colour(rand() % 255, rand() % 255, rand() % 255);
+	CanvasTriangle triangle = CanvasTriangle(v0, v1, v2);
+	drawFilledTriangle(triangle, colour, window);
+}
+
+
+
 void handleEvent(SDL_Event event, DrawingWindow &window) {
 	if (event.type == SDL_KEYDOWN) {
 		if (event.key.keysym.sym == SDLK_LEFT) {	
@@ -278,7 +397,7 @@ void handleEvent(SDL_Event event, DrawingWindow &window) {
 		else if (event.key.keysym.sym == SDLK_DOWN) std::cout << "DOWN" << std::endl;
 		else if (event.key.keysym.sym == SDLK_t) {
 			std::cout << "you selected draw triangle" << std::endl;
-			drawRandomStrokeTriangle(window);
+			drawRandomFilledTriangle(window);
 		}
 
 		else if (event.key.keysym.sym == SDLK_i) {
