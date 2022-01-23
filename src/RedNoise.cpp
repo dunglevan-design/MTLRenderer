@@ -23,6 +23,25 @@ using namespace std;
 #define HEIGHT 240
 
 
+void drawline(CanvasPoint from, CanvasPoint to, Colour c, DrawingWindow& window)
+{
+
+	float xDiff = to.x - from.x;
+	float yDiff = to.y - from.y;
+	float numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+	float xStepSize = xDiff / numberOfSteps;
+	float yStepSize = yDiff / numberOfSteps;
+
+	for (size_t i = 0; i < numberOfSteps; i++)
+	{
+		float x = from.x + xStepSize * i;
+		float y = from.y + yStepSize * i;
+
+		uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+		window.setPixelColour(round(x), round(y), colour);
+	}
+}
+
 map<string, Colour> LoadObjMaterial() {
 	map<string, Colour> pallete;
 	pallete["Red"] = Colour("Test", 255, 0, 0);
@@ -199,7 +218,6 @@ int main(int argc, char *argv[]) {
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
 
-	interpolateSinglePoints()
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
