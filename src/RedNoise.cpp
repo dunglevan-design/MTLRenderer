@@ -15,9 +15,10 @@
 #include <algorithm>
 #include <RayTriangleIntersection.h>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 using namespace std;
-
-
 #define WIDTH 320
 #define HEIGHT 240
 
@@ -106,7 +107,63 @@ vector<ModelTriangle> LoadObjtriangles() {
 		}
 	}
 	return triangles;
+}
 
+void drawPixel(int x, int y, Colour c, DrawingWindow& window) {
+	uint32_t colour = (255 << 24) + ((int)(c.red) << 16) + ((int)(c.green) << 8) + ((int)(c.blue));
+	window.setPixelColour(x, y, colour);
+}
+
+std::vector<float> interpolateSingleFloats(float from, float to, int numberOfValues) {
+	std::vector<float> returnVector{ from };
+	if (numberOfValues == 1) {
+		return returnVector;
+	}
+	for (int i = 2; i <= numberOfValues; i++)
+	{
+		returnVector.push_back(from + ((to - from) / (numberOfValues - 1)) * (i - 1));
+	}
+	return returnVector;
+}
+
+std::vector<CanvasPoint> interpolateSinglePoints(CanvasPoint from, CanvasPoint to) {
+	vector<CanvasPoint> returnvector{ from };
+
+	float xDiff = from.x - to.x;
+	float yDiff = from.y - to.y;
+	float zDiff = from.depth - to.depth;
+	int numberofsteps = round(max(max(abs(xDiff), abs(yDiff)), abs(zDiff))) + 1;
+
+
+	vector<float> tests = interpolateSingleFloats(2.2, 8.5, 2);
+	vector<float> xs = interpolateSingleFloats(from.x, to.x, numberofsteps);
+	vector<float> ys = interpolateSingleFloats(from.y, to.y, numberofsteps);
+	vector<float> zs = interpolateSingleFloats(from.depth, to.depth, numberofsteps);
+
+	for (int i = 0; i < numberofsteps; i++)
+	{
+		CanvasPoint point = CanvasPoint(xs[i], ys[i], zs[i]);
+		returnvector.push_back(point);
+	}
+	return returnvector;
+}
+std::vector<CanvasPoint> interpolateSinglePoints(CanvasPoint from, CanvasPoint to, int numberofsteps) {
+	vector<CanvasPoint> returnvector{ from };
+
+	//int numberOfSteps = std::max(abs(xDiff), abs(yDiff));
+
+
+	vector<float> tests = interpolateSingleFloats(2.2, 8.5, 2);
+	vector<float> xs = interpolateSingleFloats(from.x, to.x, numberofsteps);
+	vector<float> ys = interpolateSingleFloats(from.y, to.y, numberofsteps);
+	vector<float> zs = interpolateSingleFloats(from.depth, to.depth, numberofsteps);
+
+	for (int i = 0; i < numberofsteps; i++)
+	{
+		CanvasPoint point = CanvasPoint(xs[i], ys[i], zs[i]);
+		returnvector.push_back(point);
+	}
+	return returnvector;
 }
 
 
@@ -141,6 +198,8 @@ int main(int argc, char *argv[]) {
 	
 	DrawingWindow window = DrawingWindow(WIDTH, HEIGHT, false);
 	SDL_Event event;
+
+	interpolateSinglePoints()
 	while (true) {
 		// We MUST poll for events - otherwise the window will freeze !
 		if (window.pollForInputEvents(event)) handleEvent(event, window);
