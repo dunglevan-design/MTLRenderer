@@ -17,3 +17,6 @@ Now, foreach columns, we interpolate between the top most value and the bottom v
 ### We use rasterization(fill the triangle from top to bottom, left to right)
 ![filled triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/filledtriangles.png?alt=media&token=30753c01-35cd-44b4-97db-11d8c758a144)
 ![stroked triangles](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/stroketriangles.png?alt=media&token=4e648f14-0358-4667-bf1c-43340981f720)
+
+### Texture mapping the triangles
+![texture map](https://firebasestorage.googleapis.com/v0/b/simplerenderer.appspot.com/o/texturemap.png?alt=media&token=004ac8bf-bf01-42c3-a795-ce27e35d4e0d)
