@@ -9,9 +9,9 @@ The program reads an object file in obj format, and an optional material file in
 ## Run
 Make sure you have SDL2 installed
 clone the repo. Run the following commands
-   cd SimpleRenderer
-   Put [yourobject].obj and [yourobject].mtl files in this folder
-   Rename [yourobject] -> cornell-box
+   cd SimpleRenderer <br/>
+   Put [yourobject].obj and [yourobject].mtl files in this folder <br/>
+   Rename [yourobject] -> cornell-box <br/>
    make
 
 ## commands:
